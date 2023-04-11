@@ -1,0 +1,24 @@
+{
+  "name": "sourcify-stats",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sourcifyeth/sourcify-stats.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sourcifyeth/sourcify-stats/issues"
+  },
+  "homepage": "https://github.com/sourcifyeth/sourcify-stats#readme",
+  "type": "module",
+  "dependencies": {
+    "fast-csv": "^4.3.6",
+    "node-fetch": "^3.3.1"
+  }
+}
