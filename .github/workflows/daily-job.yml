@@ -1,0 +1,29 @@
+name: Daily Job
+on:
+  schedule:
+    # Schedule the job to run at 00:00am UTC every day
+    - cron: '0 0 * * *'
+  # To be able to run manually
+  workflow_dispatch:
+jobs:
+  daily-job:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code3
+      uses: actions/checkout@v3
+    - name: Setup node environment
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - name: Install
+      run: npm ci
+    - name: Run node script
+      run: node ./index.js
+    - name: Set up date
+      run: echo "TODAYS_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+    - name: Commit new stats
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git commit -am "${TODAYS_DATE} Daily stats"
+        git push
