@@ -17,7 +17,9 @@ downloadSourcifyStats()
   .then((sourcifyStats) => {
     // Separate file for each chain. Difficult to contain everything in a single .csv because the chains can change and columns will be malformed.
     Object.keys(sourcifyStats).forEach((chainId) => {
-      const chainStats = sourcifyStats[chainId];
+      const chainStats = {};
+      chainStats.full_match = sourcifyStats[chainId].full_match;
+      chainStats.partial_match = sourcifyStats[chainId]. partial_match;
       chainStats.total = chainStats.full_match + chainStats.partial_match;
       // Assign today's date in YYYY-MM-DD format to chains.date
       chainStats.date = new Date().toISOString().split("T")[0];
