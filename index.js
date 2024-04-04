@@ -32,12 +32,20 @@ downloadSourcifyStats()
 
 const appendCsv = (chainId, rowObject) => {
   return new Promise((resolve, reject) => {
-    const fsWriteStream = fs.createWriteStream(`./chainStats/${chainId}.csv`, {
+    const fileName = `./chainStats/${chainId}.csv`;
+    let writeHeaders = false;
+    try {
+      fs.accessSync(fileName, fs.constants.F_OK);
+      // file exists, don't write headers
+    } catch (err) {
+      writeHeaders = true;
+    }
+    const fsWriteStream = fs.createWriteStream(fileName, {
       flags: "a",
     }); // append flag.
     const csvStream = csv.format({
       headers: true,
-      writeHeaders: false,
+      writeHeaders: writeHeaders,
       includeEndRowDelimiter: true,
     });
     csvStream
