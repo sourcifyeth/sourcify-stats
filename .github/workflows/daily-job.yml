@@ -25,5 +25,6 @@ jobs:
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git commit -am "${TODAYS_DATE} Daily stats"
+        git add ./chainStats
+        git commit -m "${TODAYS_DATE} Daily stats"
         git push
