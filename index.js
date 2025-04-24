@@ -1,4 +1,4 @@
-const SOURCIFY_STATS_URL = "https://repo.sourcify.dev/stats.json";
+const SOURCIFY_STATS_URL = "https://sourcify.dev/static/stats.json";
 import fetch from "node-fetch";
 import fs from "fs";
 import csv from "fast-csv";
@@ -6,9 +6,7 @@ import csv from "fast-csv";
 const downloadSourcifyStats = async () => {
   const sourcifyStats = await (await fetch(SOURCIFY_STATS_URL)).json();
   if (!sourcifyStats) {
-    throw new Error(
-      "Could not fetch sourcify stats from " + SOURCIFY_STATS_URL
-    );
+    throw new Error("Could not fetch sourcify stats from " + SOURCIFY_STATS_URL);
   }
   return sourcifyStats;
 };
