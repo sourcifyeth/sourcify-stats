@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sourcify Verification Stats</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+  <style>
+    /* ── Sourcify brand colors ───────────────────────────────────────────────
+       ceruleanBlue-100 #E8EFFF  bg tint / hover
+       ceruleanBlue-200 #A9BDEE  borders
+       ceruleanBlue-500 #2B50AA  primary active
+       ceruleanBlue-800 #0E204E  dark bg / headings
+       lightCoral-500   #FF858D  secondary accent
+    ─────────────────────────────────────────────────────────────────────── */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "IBM Plex Sans", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: #f3f4f6; /* gray-100 */
+      color: #1f2937;      /* gray-800 */
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    header { background: #0E204E; color: #f8fafc; }
+    .header-inner {
+      max-width: 1440px; margin: 0 auto;
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    header h1 {
+      font-size: 1.1rem; font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+    }
+    header .meta { font-size: 0.78rem; color: #A9BDEE; white-space: nowrap; }
+
+    /* ── Layout ─────────────────────────────────────────────────────────── */
+    .container { max-width: 1440px; margin: 0 auto; padding: 24px 32px; }
+    @media (min-width: 768px)  { .container, .header-inner { padding-left: 48px;  padding-right: 48px;  } }
+    @media (min-width: 1024px) { .container, .header-inner { padding-left: 96px;  padding-right: 96px;  } }
+
+    /* ── Card base (shared) ─────────────────────────────────────────────── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -1px rgba(0,0,0,.04);
+      transition: border-color 300ms, box-shadow 300ms;
+    }
+    .card:hover {
+      border-color: #2B50AA;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,.08), 0 10px 10px -5px rgba(0,0,0,.04);
+    }
+
+    /* ── Summary row ────────────────────────────────────────────────────── */
+    .summary-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .s-card { padding: 14px 20px; min-width: 130px; flex: 1; }
+    .s-card .label {
+      font-size: 0.7rem; font-weight: 500; color: #6b7280;
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+    .s-card .value {
+      font-size: 1.5rem; font-weight: 700; color: #0E204E; margin-top: 4px;
+    }
+    .s-card .sub { font-size: 0.7rem; color: #9ca3af; margin-top: 3px; }
+
+    /* ── Controls ───────────────────────────────────────────────────────── */
+    .controls {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .search-wrap { position: relative; }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: #9ca3af; pointer-events: none; display: flex;
+    }
+    #search {
+      height: 40px; padding: 0 14px 0 36px;
+      border: 2px solid #A9BDEE;
+      border-radius: 6px;
+      font-size: 0.85rem; font-family: inherit; outline: none;
+      width: 220px; background: #f9fafb;
+      transition: border-color .2s, background .2s;
+    }
+    #search:focus { border-color: #2B50AA; background: white; }
+
+    /* Toggle button groups — pill style matching sourcify-ui buttons */
+    .toggle-group { display: flex; gap: 6px; }
+    .tog-btn {
+      height: 40px; padding: 0 16px;
+      border: none; border-radius: 9999px;
+      cursor: pointer; white-space: nowrap;
+      font-size: 0.82rem; font-weight: 500; font-family: inherit;
+      background: #E8EFFF; color: #2B50AA;
+      transition: background .15s, color .15s, box-shadow .15s;
+    }
+    .tog-btn:hover:not(.active) { background: #d0daf7; }
+    .tog-btn.active {
+      background: #2B50AA; color: white;
+      box-shadow: 0 2px 6px rgba(43,80,170,.3);
+    }
+
+    /* All Chains toggle — inherits .chip, just needs the line swatch */
+    #btn-allchains { font-weight: 600; }
+    #btn-allchains:hover { opacity: 0.88; }
+    .line-swatch {
+      width: 16px; height: 3px; border-radius: 2px;
+      background: currentColor; flex-shrink: 0;
+    }
+
+    /* ── Chart card ─────────────────────────────────────────────────────── */
+    .chart-card { margin-bottom: 16px; overflow: hidden; }
+    #loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 300px; color: #9ca3af; font-size: 0.9rem; gap: 10px;
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid #E8EFFF; border-top-color: #2B50AA;
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #chart { width: 100%; height: 500px; display: none; }
+
+    /* ── Chains panel ───────────────────────────────────────────────────── */
+    .chains-card { padding: 16px 20px; }
+    .chains-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+    }
+    .chains-header h3 {
+      font-size: 0.75rem; font-weight: 600; color: #6b7280;
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+    .chains-actions { display: flex; gap: 4px; align-items: center; }
+    .text-btn {
+      font-size: 0.78rem; font-weight: 500; color: #2B50AA;
+      background: none; border: none; cursor: pointer;
+      padding: 4px 10px; border-radius: 9999px; font-family: inherit;
+      transition: background .15s;
+    }
+    .text-btn:hover { background: #E8EFFF; }
+    .hint { font-size: 0.73rem; color: #9ca3af; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px;
+      border: 2px solid #e5e7eb; border-radius: 9999px;
+      background: white; cursor: pointer;
+      font-size: 0.78rem; font-weight: 500; font-family: inherit;
+      transition: border-color .15s, background .15s;
+      user-select: none; white-space: nowrap; line-height: 1.3;
+    }
+    .chip:hover:not(.active) { border-color: #A9BDEE; }
+    .chip.active { color: white; border-color: transparent; }
+    .chip .sep { opacity: 0.35; font-weight: 400; margin: 0 2px; }
+    .chip .cnt { font-weight: 700; }
+    .chip .cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .chip.hidden { display: none; }
+
+    @media (max-width: 640px) {
+      .header-inner { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .s-card .value { font-size: 1.2rem; }
+      #chart { height: 360px; }
+      #search { width: 180px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>
+      <img src="https://github.com/sourcifyeth/assets/blob/master/logo-assets-png/sourcify_blue_rounded.png?raw=true"
+           alt="Sourcify" height="28" style="border-radius:4px;display:block">
+      Verification Stats
+    </h1>
+    <span class="meta" id="updated">Loading…</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="summary-row" id="summary">
+    <div class="s-card card"><div class="label">Loading</div><div class="value">—</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </span>
+      <input id="search" type="text" placeholder="Search chains…" autocomplete="off">
+    </div>
+    <div class="toggle-group" id="metric-group">
+      <button class="tog-btn active" data-mode="total">Total</button>
+      <button class="tog-btn" data-mode="full">Full Match</button>
+      <button class="tog-btn" data-mode="partial">Partial Match</button>
+    </div>
+  </div>
+
+  <div class="chart-card card">
+    <div id="loading"><div class="spinner"></div>Loading data…</div>
+    <div id="chart"></div>
+  </div>
+
+  <div class="chains-card card">
+    <div class="chains-header">
+      <h3>Chains <span id="chain-count" style="font-weight:400;color:#9ca3af"></span></h3>
+      <div class="chains-actions">
+        <span class="hint">Click to toggle</span>
+        <button class="text-btn" id="btn-top10">Top 10</button>
+        <button class="text-btn" id="btn-clear">Clear all</button>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <button id="btn-allchains" class="chip active" style="background:#2B50AA;border-color:#2B50AA">
+        <span class="line-swatch"></span>All Chains
+      </button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── Plotly default colorway ───────────────────────────────────────────────
+const COLORS = [
+  '#636EFA','#EF553B','#00CC96','#AB63FA','#FFA15A',
+  '#19D3F3','#FF6692','#B6E880','#FF97FF','#FECB52',
+  '#1F77B4','#FF7F0E','#2CA02C','#D62728','#9467BD',
+  '#8C564B','#E377C2','#7F7F7F','#BCBD22','#17BECF',
+  '#AEC7E8','#FFBB78','#98DF8A','#FF9896','#C5B0D5',
+  '#C49C94','#F7B6D2','#C7C7C7','#DBDB8D','#9EDAE5',
+];
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let appData   = null;
+let sorted    = [];
+let active    = new Set();
+let mode          = 'total';
+let showAllChains = true;
+let plotReady     = false;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function fmt(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toLocaleString();
+}
+
+function getY(chain) {
+  if (mode === 'full')    return chain.full;
+  if (mode === 'partial') return chain.partial;
+  return chain.total;
+}
+
+// ─── Aggregate "All Chains" line ───────────────────────────────────────────
+function computeAggregate() {
+  const map = new Map();
+  for (const { chain } of sorted) {
+    const vals = getY(chain);
+    chain.dates.forEach((d, i) => {
+      map.set(d, (map.get(d) || 0) + vals[i]);
+    });
+  }
+  const dates = Array.from(map.keys()).sort();
+  return { dates, vals: dates.map(d => map.get(d)) };
+}
+
+// ─── Build all Plotly traces ───────────────────────────────────────────────
+function buildTraces() {
+  const agg = computeAggregate();
+  const traces = [{
+    x: agg.dates,
+    y: agg.vals,
+    name: 'All Chains',
+    type: 'scatter',
+    mode: 'lines',
+    visible: true,
+    visible: showAllChains,
+    line: { color: '#2B50AA', width: 2.5 },
+    hovertemplate: '<b>All Chains</b><br>%{x|%b %d, %Y}: <b>%{y:,}</b><extra></extra>',
+  }];
+  for (const { id, chain, color } of sorted) {
+    const label = chain.name.includes(id) ? chain.name : `${chain.name} (${id})`;
+    traces.push({
+      x: chain.dates,
+      y: getY(chain),
+      name: label,
+      type: 'scatter',
+      mode: 'lines',
+      visible: active.has(id) ? true : false,
+      line: { color, width: 1.5 },
+      hovertemplate: '<b>%{fullData.name}</b><br>%{x|%b %d, %Y}: <b>%{y:,}</b><extra></extra>',
+    });
+  }
+  return traces;
+}
+
+// ─── Chart ─────────────────────────────────────────────────────────────────
+function renderChart() {
+  document.getElementById('loading').style.display = 'none';
+  const chartEl = document.getElementById('chart');
+  chartEl.style.display = 'block';
+
+  const traces = buildTraces();
+  const layout = {
+    margin: { t: 20, r: 16, b: 50, l: 70 },
+    hovermode: 'closest',
+    showlegend: false,
+    xaxis: {
+      type: 'date',
+      gridcolor: '#f3f4f6',
+      rangeslider: { visible: true, thickness: 0.04, bgcolor: '#f9fafb' },
+      rangeselector: {
+        y: 1.02,
+        buttons: [
+          { count: 1,  label: '1M', step: 'month', stepmode: 'backward' },
+          { count: 3,  label: '3M', step: 'month', stepmode: 'backward' },
+          { count: 6,  label: '6M', step: 'month', stepmode: 'backward' },
+          { count: 1,  label: '1Y', step: 'year',  stepmode: 'backward' },
+          { step: 'all', label: 'All' },
+        ],
+        bgcolor: '#f9fafb',
+        bordercolor: '#A9BDEE',
+        borderwidth: 1,
+        activecolor: '#2B50AA',
+        font: { size: 11 },
+      },
+    },
+    yaxis: {
+      tickformat: ',d',
+      gridcolor: '#f3f4f6',
+      zeroline: false,
+    },
+    paper_bgcolor: 'white',
+    plot_bgcolor: 'white',
+    font: { family: '"IBM Plex Sans", Roboto, sans-serif', size: 12, color: '#1f2937' },
+  };
+
+  if (!plotReady) {
+    Plotly.newPlot('chart', traces, layout, {
+      responsive: true,
+      displaylogo: false,
+      modeBarButtonsToRemove: ['select2d', 'lasso2d', 'toImage'],
+    });
+    plotReady = true;
+  } else {
+    Plotly.react('chart', traces, layout);
+  }
+}
+
+// ─── Summary cards ─────────────────────────────────────────────────────────
+function renderSummary() {
+  const grandTotal = sorted.reduce((s, c) => s + c.latestTotal, 0);
+  const top3 = sorted.slice(0, 3);
+  document.getElementById('summary').innerHTML = `
+    <div class="s-card card">
+      <div class="label">All Chains Total</div>
+      <div class="value">${fmt(grandTotal)}</div>
+      <div class="sub">${sorted.length} chains tracked</div>
+    </div>
+    ${top3.map(c => `
+      <div class="s-card card">
+        <div class="label">${c.chain.name}</div>
+        <div class="value">${fmt(c.latestTotal)}</div>
+        <div class="sub">Chain ${c.id}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ─── Chips ─────────────────────────────────────────────────────────────────
+function renderChips() {
+  const filter = document.getElementById('search').value.toLowerCase().trim();
+  let visible = 0;
+  const html = sorted.map(({ id, chain, color, latestTotal }) => {
+    const match = !filter
+      || chain.name.toLowerCase().includes(filter)
+      || id.includes(filter);
+    if (match) visible++;
+    const isActive = active.has(id);
+    return `<button
+      class="chip${isActive ? ' active' : ''}${match ? '' : ' hidden'}"
+      data-id="${id}"
+      style="${isActive ? `background:${color};border-color:${color}` : ''}"
+      title="${chain.name} — Chain ${id}"
+    >${
+      isActive
+        ? ''
+        : `<span class="cdot" style="background:${color}"></span>`
+    }${chain.name} (${id})<span class="sep"> —</span><span class="cnt"> ${fmt(latestTotal)}</span></button>`;
+  }).join('');
+  document.getElementById('chips').innerHTML = html;
+  document.getElementById('chain-count').textContent = `(${visible} shown)`;
+  document.getElementById('chips').querySelectorAll('.chip').forEach(el => {
+    el.addEventListener('click', () => toggleChain(el.dataset.id));
+  });
+}
+
+// ─── Toggle a single chain ─────────────────────────────────────────────────
+function toggleChain(id) {
+  if (active.has(id)) active.delete(id); else active.add(id);
+  const idx = sorted.findIndex(c => c.id === id);
+  if (idx >= 0 && plotReady) {
+    Plotly.restyle('chart', { visible: active.has(id) ? true : false }, [idx + 1]);
+  }
+  renderChips();
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+async function init() {
+  const res = await fetch('./data.json');
+  if (!res.ok) throw new Error(`Failed to load data.json: ${res.status}`);
+  appData = await res.json();
+
+  sorted = Object.entries(appData.chains)
+    .map(([id, chain]) => ({ id, chain, latestTotal: chain.total.at(-1) || 0 }))
+    .sort((a, b) => b.latestTotal - a.latestTotal)
+    .map((item, i) => ({ ...item, color: COLORS[i % COLORS.length] }));
+
+  sorted.slice(0, 10).forEach(c => active.add(c.id));
+  document.getElementById('updated').textContent = 'Updated ' + appData.lastUpdated;
+
+  renderSummary();
+  renderChart();
+  renderChips();
+}
+
+// ─── Event listeners ───────────────────────────────────────────────────────
+
+// Metric toggle (Total / Full Match / Partial Match)
+document.querySelectorAll('#metric-group .tog-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.mode === mode) return;
+    document.querySelectorAll('#metric-group .tog-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    renderChart();
+  });
+});
+
+// All Chains toggle
+document.getElementById('btn-allchains').addEventListener('click', () => {
+  showAllChains = !showAllChains;
+  const btn = document.getElementById('btn-allchains');
+  btn.classList.toggle('active', showAllChains);
+  btn.style.background    = showAllChains ? '#2B50AA' : '';
+  btn.style.borderColor   = showAllChains ? '#2B50AA' : '';
+  if (plotReady) Plotly.restyle('chart', { visible: showAllChains }, [0]);
+});
+
+document.getElementById('search').addEventListener('input', renderChips);
+
+document.getElementById('btn-top10').addEventListener('click', () => {
+  active.clear();
+  sorted.slice(0, 10).forEach(c => active.add(c.id));
+  renderChart();
+  renderChips();
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  active.clear();
+  renderChart();
+  renderChips();
+});
+
+init().catch(err => {
+  document.getElementById('loading').innerHTML =
+    `<span style="color:#ef4444">Error loading data: ${err.message}</span>`;
+});
+</script>
+
+</body>
+</html>

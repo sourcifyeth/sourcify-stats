@@ -19,12 +19,14 @@ jobs:
       run: npm ci
     - name: Run node script
       run: node ./index.js
+    - name: Build visualization
+      run: node ./build-visualization.js
     - name: Set up date
       run: echo "TODAYS_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
     - name: Commit new stats
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
-        git add ./chainStats
+        git add ./chainStats ./docs
         git commit -m "${TODAYS_DATE} Daily stats"
         git push
