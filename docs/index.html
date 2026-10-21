@@ -57,17 +57,6 @@
       box-shadow: 0 20px 25px -5px rgba(0,0,0,.08), 0 10px 10px -5px rgba(0,0,0,.04);
     }
 
-    /* ── Summary row ────────────────────────────────────────────────────── */
-    .summary-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .s-card { padding: 14px 20px; min-width: 130px; flex: 1; }
-    .s-card .label {
-      font-size: 0.7rem; font-weight: 500; color: #6b7280;
-      text-transform: uppercase; letter-spacing: .07em;
-    }
-    .s-card .value {
-      font-size: 1.5rem; font-weight: 700; color: #0E204E; margin-top: 4px;
-    }
-    .s-card .sub { font-size: 0.7rem; color: #9ca3af; margin-top: 3px; }
 
     /* ── Controls ───────────────────────────────────────────────────────── */
     .controls {
@@ -105,14 +94,6 @@
       box-shadow: 0 2px 6px rgba(43,80,170,.3);
     }
 
-    /* All Chains toggle — inherits .chip, just needs the line swatch */
-    #btn-allchains { font-weight: 600; }
-    #btn-allchains:hover { opacity: 0.88; }
-    .line-swatch {
-      width: 16px; height: 3px; border-radius: 2px;
-      background: currentColor; flex-shrink: 0;
-    }
-
     /* ── Chart card ─────────────────────────────────────────────────────── */
     .chart-card { margin-bottom: 16px; overflow: hidden; }
     #loading {
@@ -146,28 +127,102 @@
     }
     .text-btn:hover { background: #E8EFFF; }
     .hint { font-size: 0.73rem; color: #9ca3af; }
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 5px 12px;
-      border: 2px solid #e5e7eb; border-radius: 9999px;
-      background: white; cursor: pointer;
-      font-size: 0.78rem; font-weight: 500; font-family: inherit;
-      transition: border-color .15s, background .15s;
-      user-select: none; white-space: nowrap; line-height: 1.3;
+
+    /* ── Ranked chain table ─────────────────────────────────────────────── */
+    .rank-wrap {
+      max-height: 620px; overflow-y: auto;
+      border: 1px solid #e5e7eb; border-radius: 8px;
     }
-    .chip:hover:not(.active) { border-color: #A9BDEE; }
-    .chip.active { color: white; border-color: transparent; }
-    .chip .sep { opacity: 0.35; font-weight: 400; margin: 0 2px; }
-    .chip .cnt { font-weight: 700; }
-    .chip .cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .chip.hidden { display: none; }
+    table.rank {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.85rem; font-variant-numeric: tabular-nums;
+    }
+    /* Header row and the All Chains row stay at the top when the list scrolls */
+    .rank thead { position: sticky; top: 0; z-index: 2; }
+    .rank th {
+      background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+      padding: 9px 12px; text-align: left; white-space: nowrap;
+      font-size: 0.7rem; font-weight: 600; color: #6b7280;
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .rank th.c-num { text-align: right; cursor: pointer; }
+    .rank th.c-num:hover { color: #2B50AA; }
+    .rank th.c-num.on { color: #2B50AA; }
+    .rank th.c-num.on::after { content: " ▼"; font-size: 0.6rem; }
+    .rank td {
+      padding: 7px 12px; border-bottom: 1px solid #f3f4f6;
+      white-space: nowrap;
+    }
+    .rank tbody tr { cursor: pointer; transition: background .1s; }
+    .rank tbody tr:hover { background: #f5f8ff; }
+    .rank tbody tr.on { background: #E8EFFF; }
+    .rank tbody tr.on:hover { background: #dce6ff; }
+    .rank tbody tr:last-child td { border-bottom: none; }
+    .c-sel { width: 36px; padding-right: 0 !important; }
+    .c-rank { width: 48px; color: #9ca3af; font-weight: 600; text-align: right; }
+    .c-name .nm { font-weight: 500; color: #1f2937; }
+    .c-name .cid { color: #9ca3af; font-size: 0.75rem; margin-left: 6px; }
+    td.c-num { text-align: right; color: #6b7280; }
+    td.c-num.on { color: #0E204E; font-weight: 700; }
+    .c-share { width: 22%; min-width: 140px; }
+    .share { display: flex; align-items: center; gap: 8px; }
+    .share .bar {
+      flex: 1; height: 6px; border-radius: 3px; background: #f3f4f6; overflow: hidden;
+    }
+    .share .bar span { display: block; height: 100%; border-radius: 3px; }
+    .share .pct { width: 48px; text-align: right; color: #6b7280; font-size: 0.75rem; }
+    .rank-empty { padding: 24px; text-align: center; color: #9ca3af; font-size: 0.85rem; }
+
+    /* All Chains row: dark when shown on the chart, light blue when hidden */
+    .all-row { cursor: pointer; }
+    .all-row td {
+      padding-top: 12px; padding-bottom: 12px; font-size: 0.95rem;
+      background: #E8EFFF; color: #0E204E;
+      border-bottom: none; box-shadow: inset 0 -2px 0 #A9BDEE;
+      transition: background .1s;
+    }
+    .all-row:hover td { background: #dce6ff; }
+    .all-row .nm { font-weight: 700; color: inherit; }
+    .all-row .cid { color: #6b7280; }
+    .all-row td.c-num { color: #2B50AA; }
+    .all-row td.c-num.on { color: #0E204E; font-size: 1.05rem; }
+    .all-row .c-rank { color: inherit; font-size: 1.1rem; }
+    .all-row .pct { color: inherit; font-weight: 600; }
+    .all-row .sel { --c: #2B50AA; }
+    .all-row .bar span { background: #2B50AA; }
+    .all-row.on td { background: #0E204E; color: white; box-shadow: inset 0 -2px 0 #2B50AA; }
+    .all-row.on:hover td { background: #16306f; }
+    .all-row.on .cid { color: #A9BDEE; }
+    .all-row.on td.c-num { color: #A9BDEE; }
+    .all-row.on td.c-num.on { color: white; }
+    .all-row.on .sel { --c: white; }
+    .all-row.on .sel:checked::after { border-color: #0E204E; }
+    .all-row.on .bar { background: rgba(255,255,255,.15); }
+    .all-row.on .bar span { background: white; }
+
+    /* Checkbox filled with the chain's line color when shown on the chart */
+    .sel {
+      appearance: none; -webkit-appearance: none; margin: 0;
+      width: 16px; height: 16px; border-radius: 4px; cursor: pointer;
+      border: 2px solid var(--c); background: white;
+      display: grid; place-content: center; vertical-align: middle;
+    }
+    .sel:checked { background: var(--c); }
+    .sel:checked::after {
+      content: ""; width: 4px; height: 8px; margin-top: -2px;
+      border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+    }
+    .sel:focus-visible { outline: 2px solid #2B50AA; outline-offset: 2px; }
 
     @media (max-width: 640px) {
       .header-inner { flex-direction: column; align-items: flex-start; gap: 6px; }
-      .s-card .value { font-size: 1.2rem; }
       #chart { height: 360px; }
       #search { width: 180px; }
+      /* On phones, keep only rank, chain, the selected metric and nothing else */
+      .rank td.c-num:not(.on), .rank th.c-num:not(.on), .c-share { display: none; }
+      .rank th, .rank td { padding-left: 8px; padding-right: 8px; }
+      .c-rank { width: 36px; }
+      .c-name .cid { display: block; margin-left: 0; }
     }
   </style>
 </head>
@@ -186,9 +241,6 @@
 
 <div class="container">
 
-  <div class="summary-row" id="summary">
-    <div class="s-card card"><div class="label">Loading</div><div class="value">—</div></div>
-  </div>
 
   <div class="controls">
     <div class="search-wrap">
@@ -216,17 +268,28 @@
     <div class="chains-header">
       <h3>Chains <span id="chain-count" style="font-weight:400;color:#9ca3af"></span></h3>
       <div class="chains-actions">
-        <span class="hint">Click to toggle</span>
+        <span class="hint">Click a row to show it on the chart</span>
         <button class="text-btn" id="btn-top10">Top 10</button>
         <button class="text-btn" id="btn-clear">Clear all</button>
       </div>
     </div>
-    <div style="margin-bottom:10px">
-      <button id="btn-allchains" class="chip active" style="background:#2B50AA;border-color:#2B50AA">
-        <span class="line-swatch"></span>All Chains
-      </button>
+    <div class="rank-wrap">
+      <table class="rank">
+        <thead>
+          <tr>
+            <th class="c-sel"></th>
+            <th class="c-rank">#</th>
+            <th class="c-name">Chain</th>
+            <th class="c-num" data-mode="total">Total</th>
+            <th class="c-num" data-mode="full">Full match</th>
+            <th class="c-num" data-mode="partial">Partial match</th>
+            <th class="c-share">Share</th>
+          </tr>
+          <tr id="all-row" class="all-row on"></tr>
+        </thead>
+        <tbody id="rank-body"></tbody>
+      </table>
     </div>
-    <div class="chips" id="chips"></div>
   </div>
 
 </div>
@@ -251,12 +314,6 @@ let showAllChains = true;
 let plotReady     = false;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-function fmt(n) {
-  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-  return n.toLocaleString();
-}
 
 function getY(chain) {
   if (mode === 'full')    return chain.full;
@@ -360,52 +417,85 @@ function renderChart() {
   }
 }
 
-// ─── Summary cards ─────────────────────────────────────────────────────────
-function renderSummary() {
-  const grandTotal = sorted.reduce((s, c) => s + c.latestTotal, 0);
-  const top3 = sorted.slice(0, 3);
-  document.getElementById('summary').innerHTML = `
-    <div class="s-card card">
-      <div class="label">All Chains Total</div>
-      <div class="value">${fmt(grandTotal)}</div>
-      <div class="sub">${sorted.length} chains tracked</div>
-    </div>
-    ${top3.map(c => `
-      <div class="s-card card">
-        <div class="label">${c.chain.name}</div>
-        <div class="value">${fmt(c.latestTotal)}</div>
-        <div class="sub">Chain ${c.id}</div>
-      </div>
-    `).join('')}
-  `;
+// ─── Ranked chain table ────────────────────────────────────────────────────
+const num = n => n.toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>"']/g, ch =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+function latestOf(c) {
+  if (mode === 'full')    return c.latestFull;
+  if (mode === 'partial') return c.latestPartial;
+  return c.latestTotal;
 }
 
-// ─── Chips ─────────────────────────────────────────────────────────────────
-function renderChips() {
+// Chains ordered by the selected metric. Ties keep the order by total.
+function ranked() {
+  return [...sorted].sort((a, b) => latestOf(b) - latestOf(a));
+}
+
+function renderList() {
   const filter = document.getElementById('search').value.toLowerCase().trim();
+  const list = ranked();
+  const top = latestOf(list[0]) || 1;
+  const sum = list.reduce((s, c) => s + latestOf(c), 0) || 1;
+
+  document.querySelectorAll('.rank th.c-num').forEach(th =>
+    th.classList.toggle('on', th.dataset.mode === mode));
+
   let visible = 0;
-  const html = sorted.map(({ id, chain, color, latestTotal }) => {
+  const rows = list.map((c, i) => {
+    const { id, chain, color } = c;
     const match = !filter
       || chain.name.toLowerCase().includes(filter)
       || id.includes(filter);
-    if (match) visible++;
-    const isActive = active.has(id);
-    return `<button
-      class="chip${isActive ? ' active' : ''}${match ? '' : ' hidden'}"
-      data-id="${id}"
-      style="${isActive ? `background:${color};border-color:${color}` : ''}"
-      title="${chain.name} — Chain ${id}"
-    >${
-      isActive
-        ? ''
-        : `<span class="cdot" style="background:${color}"></span>`
-    }${chain.name} (${id})<span class="sep"> —</span><span class="cnt"> ${fmt(latestTotal)}</span></button>`;
+    if (!match) return '';
+    visible++;
+    const on = active.has(id);
+    const v = latestOf(c);
+    const cell = (m, val) => `<td class="c-num${mode === m ? ' on' : ''}">${num(val)}</td>`;
+    return `<tr data-id="${id}" class="${on ? 'on' : ''}">
+      <td class="c-sel"><input type="checkbox" class="sel" style="--c:${color}"
+        aria-label="Show ${esc(chain.name)} on chart"${on ? ' checked' : ''}></td>
+      <td class="c-rank">${i + 1}</td>
+      <td class="c-name"><span class="nm">${esc(chain.name)}</span><span class="cid">Chain ID: ${id}</span></td>
+      ${cell('total', c.latestTotal)}${cell('full', c.latestFull)}${cell('partial', c.latestPartial)}
+      <td class="c-share"><div class="share">
+        <div class="bar"><span style="width:${(v / top * 100).toFixed(1)}%;background:${color}"></span></div>
+        <span class="pct">${(v / sum * 100).toFixed(v / sum >= 0.1 ? 1 : 2)}%</span>
+      </div></td>
+    </tr>`;
   }).join('');
-  document.getElementById('chips').innerHTML = html;
+
+  renderAllRow();
+  document.getElementById('rank-body').innerHTML = rows
+    || `<tr><td colspan="7" class="rank-empty">No chains match “${esc(filter)}”</td></tr>`;
   document.getElementById('chain-count').textContent = `(${visible} shown)`;
-  document.getElementById('chips').querySelectorAll('.chip').forEach(el => {
-    el.addEventListener('click', () => toggleChain(el.dataset.id));
-  });
+}
+
+// The pinned All Chains row at the top of the table: sums over every chain.
+function renderAllRow() {
+  const sum = key => sorted.reduce((s, c) => s + c[key], 0);
+  const cell = (m, val) => `<td class="c-num${mode === m ? ' on' : ''}">${num(val)}</td>`;
+  const tr = document.getElementById('all-row');
+  tr.classList.toggle('on', showAllChains);
+  tr.innerHTML = `
+    <td class="c-sel"><input type="checkbox" class="sel"
+      aria-label="Show All Chains on chart"${showAllChains ? ' checked' : ''}></td>
+    <td class="c-rank">Σ</td>
+    <td class="c-name"><span class="nm">All Chains</span><span class="cid">Total: ${sorted.length} chains</span></td>
+    ${cell('total', sum('latestTotal'))}${cell('full', sum('latestFull'))}${cell('partial', sum('latestPartial'))}
+    <td class="c-share"><div class="share">
+      <div class="bar"><span style="width:100%"></span></div><span class="pct">100%</span>
+    </div></td>`;
+}
+
+// Update one row in place, so the checkbox keeps keyboard focus.
+function updateRow(id) {
+  const tr = document.querySelector(`#rank-body tr[data-id="${id}"]`);
+  if (!tr) return;
+  const on = active.has(id);
+  tr.classList.toggle('on', on);
+  tr.querySelector('.sel').checked = on;
 }
 
 // ─── Toggle a single chain ─────────────────────────────────────────────────
@@ -415,7 +505,16 @@ function toggleChain(id) {
   if (idx >= 0 && plotReady) {
     Plotly.restyle('chart', { visible: active.has(id) ? true : false }, [idx + 1]);
   }
-  renderChips();
+  updateRow(id);
+}
+
+function setMode(m) {
+  if (m === mode) return;
+  mode = m;
+  document.querySelectorAll('#metric-group .tog-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+  renderChart();
+  renderList();
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────
@@ -425,54 +524,58 @@ async function init() {
   appData = await res.json();
 
   sorted = Object.entries(appData.chains)
-    .map(([id, chain]) => ({ id, chain, latestTotal: chain.total.at(-1) || 0 }))
+    .map(([id, chain]) => ({
+      id, chain,
+      latestTotal:   chain.total.at(-1)   || 0,
+      latestFull:    chain.full.at(-1)    || 0,
+      latestPartial: chain.partial.at(-1) || 0,
+    }))
     .sort((a, b) => b.latestTotal - a.latestTotal)
     .map((item, i) => ({ ...item, color: COLORS[i % COLORS.length] }));
 
   sorted.slice(0, 10).forEach(c => active.add(c.id));
   document.getElementById('updated').textContent = 'Updated ' + appData.lastUpdated;
 
-  renderSummary();
   renderChart();
-  renderChips();
+  renderList();
 }
 
 // ─── Event listeners ───────────────────────────────────────────────────────
 
-// Metric toggle (Total / Full Match / Partial Match)
-document.querySelectorAll('#metric-group .tog-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (btn.dataset.mode === mode) return;
-    document.querySelectorAll('#metric-group .tog-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    mode = btn.dataset.mode;
-    renderChart();
-  });
+// Metric toggle (Total / Full Match / Partial Match), from buttons or table headers
+document.querySelectorAll('#metric-group .tog-btn, .rank th.c-num').forEach(el => {
+  el.addEventListener('click', () => setMode(el.dataset.mode));
+});
+
+// Click anywhere on a row (or its checkbox) to show or hide that chain
+document.getElementById('rank-body').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-id]');
+  if (tr) toggleChain(tr.dataset.id);
 });
 
 // All Chains toggle
-document.getElementById('btn-allchains').addEventListener('click', () => {
+document.getElementById('all-row').addEventListener('click', () => {
   showAllChains = !showAllChains;
-  const btn = document.getElementById('btn-allchains');
-  btn.classList.toggle('active', showAllChains);
-  btn.style.background    = showAllChains ? '#2B50AA' : '';
-  btn.style.borderColor   = showAllChains ? '#2B50AA' : '';
+  const tr = document.getElementById('all-row');
+  tr.classList.toggle('on', showAllChains);
+  tr.querySelector('.sel').checked = showAllChains;
   if (plotReady) Plotly.restyle('chart', { visible: showAllChains }, [0]);
 });
 
-document.getElementById('search').addEventListener('input', renderChips);
+document.getElementById('search').addEventListener('input', renderList);
 
+// Top 10 follows the ranking of the selected metric
 document.getElementById('btn-top10').addEventListener('click', () => {
   active.clear();
-  sorted.slice(0, 10).forEach(c => active.add(c.id));
+  ranked().slice(0, 10).forEach(c => active.add(c.id));
   renderChart();
-  renderChips();
+  renderList();
 });
 
 document.getElementById('btn-clear').addEventListener('click', () => {
   active.clear();
   renderChart();
-  renderChips();
+  renderList();
 });
 
 init().catch(err => {
